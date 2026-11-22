@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FarmDirect — Local Farmers Market Information System</title>
+  <style>
+    :root {
+      --bg: #f4f7f5;
+      --surface: #ffffff;
+      --surface-alt: #eef4f0;
+      --primary: #1b6b3a;
+      --primary-dark: #134e2a;
+      --primary-light: #e6f4ec;
+      --accent: #e07a16;
+      --accent-light: #fef3e6;
+      --danger: #c62828;
+      --danger-light: #fdecea;
+      --text: #1a241e;
+      --muted: #5a6b60;
+      --border: #d5e0d9;
+      --shadow: 0 4px 14px rgba(18, 45, 29, 0.08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .nav-container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 20px;
+    }
+    .brand h1 { font-size: 1.2rem; color: var(--primary-dark); line-height: 1.2; }
+    .brand p { font-size: 0.78rem; color: var(--muted); }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .nav-btn:hover { background: var(--surface-alt); }
+    .nav-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .nav-btn.farmer-login {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+    .nav-btn.farmer-login:hover { background: var(--accent); color: #fff; }
+    .nav-btn.logout {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: var(--danger-light);
+    }
+
+    .role-pill {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px 16px 96px;
+    }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .hero {
+      background: linear-gradient(135deg, #165930 0%, #248248 100%);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow);
+    }
+    .hero h2 { font-size: 1.45rem; margin-bottom: 4px; }
+    .hero p { font-size: 0.92rem; opacity: 0.92; max-width: 620px; }
+    .hero-stats {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.14);
+      padding: 10px 14px;
+      border-radius: 10px;
+      min-width: 110px;
+    }
+    .stat-box strong { display: block; font-size: 1.25rem; }
+    .stat-box span { font-size: 0.76rem; opacity: 0.9; }
+
+    .filter-bar {
+      background: var(--surface);
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.92rem;
+      background: #fff;
+      color: var(--text);
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid var(--primary);
+      border-color: var(--primary);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+    .card-img-wrap {
+      position: relative;
+      height: 175px;
+      background: var(--surface-alt);
+    }
+    .card-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .cat-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.92);
+      color: var(--text);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+    .card-body {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+    .card-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .card-title h3 { font-size: 1.08rem; }
+    .savings-pill {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      background: var(--surface-alt);
+      padding: 9px 12px;
+      border-radius: 10px;
+    }
+    .farm-price { font-size: 1.25rem; font-weight: 800; color: var(--primary-dark); }
+    .market-price { font-size: 0.85rem; color: var(--muted); text-decoration: line-through; }
+
+    .meta-list {
+      font-size: 0.86rem;
+      color: var(--muted);
+      display: grid;
+      gap: 4px;
+    }
+    .meta-list strong { color: var(--text); }
+
+    .card-actions {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 6px;
+    }
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { background: #9db5a6; cursor: not-allowed; }
+    .btn-outline {
+      background: #fff;
+      color: var(--primary-dark);
+      border: 1px solid var(--primary);
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    .panel h3 { margin-bottom: 12px; color: var(--primary-dark); }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .chip {
+      font-size: 0.76rem;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .chip:hover { background: var(--primary-light); border-color: var(--primary); }
+
+    .photo-box {
+      border: 2px dashed var(--primary);
+      background: var(--primary-light);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .photo-preview {
+      max-height: 180px;
+      border-radius: 10px;
+      margin-top: 10px;
+      display: none;
+      max-width: 100%;
+    }
+
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    th { background: var(--surface-alt); font-weight: 700; }
+
+    .chart-box {
+      width: 100%;
+      overflow-x: auto;
+    }
+    canvas#priceChart {
+      width: 100%;
+      max-width: 100%;
+      height: 320px;
+      display: block;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 28, 18, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 60;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      max-width: 460px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    /* Floating Multilingual AgriVoice AI */
+    .ai-fab {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      background: var(--primary-dark);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+      cursor: pointer;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-drawer {
+      position: fixed;
+      bottom: 74px;
+      right: 18px;
+      width: 375px;
+      max-width: calc(100vw - 36px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.2);
+      display: none;
+      flex-direction: column;
+      z-index: 55;
+      overflow: hidden;
+    }
+    .ai-drawer.open { display: flex; }
+    .ai-head {
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+    }
+    .ai-lang-bar {
+      padding: 8px 12px;
+      background: var(--surface-alt);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .ai-lang-bar select {
+      padding: 5px 8px;
+      font-size: 0.82rem;
+      border-radius: 8px;
+      flex: 1;
+    }
+    .ai-quick-chips {
+      padding: 8px 10px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .ai-messages {
+      padding: 12px;
+      height: 205px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.86rem;
+      background: var(--bg);
+    }
+    .msg {
+      padding: 8px 11px;
+      border-radius: 10px;
+      max-width: 88%;
+      word-break: break-word;
+    }
+    .msg.bot { background: #fff; border: 1px solid var(--border); align-self: flex-start; }
+    .msg.user { background: var(--primary); color: #fff; align-self: flex-end; }
+    .speak-mini {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 0.74rem;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: none;
+      border-radius: 6px;
+      padding: 2px 7px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .ai-input-row {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      background: #fff;
+    }
+    .mic-recording {
+      background: var(--danger) !important;
+      color: #fff !important;
+      border-color: var(--danger) !important;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a241e;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      z-index: 80;
+      display: none;
+      max-width: 90vw;
+      text-align: center;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 36px 16px;
+      color: var(--muted);
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav-container">
+    <div class="brand">
+      <div class="brand-logo">🌱</div>
+      <div>
+        <h1>FarmDirect</h1>
+        <p>Direct Farmer-to-Consumer Market</p>
+      </div>
+    </div>
+    <nav class="nav-links" id="navLinks"></nav>
+  </div>
+</header>
+
+<main>
+  <!-- CONSUMER MARKET SECTION -->
+  <section id="sec-market" class="section active">
+    <div class="hero">
+      <div>
+        <h2>Fresh Harvest Direct from Local Farmers</h2>
+        <p>Browse real crop photos uploaded by farmers, compare direct farm prices against retail markets, and book produce instantly.</p>
+      </div>
+      <div class="hero-stats" id="heroStats"></div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="Search crop, place, or farmer name..." oninput="renderMarket()" />
+      <select id="catFilter" onchange="renderMarket()">
+        <option value="All">All Categories</option>
+        <option value="Vegetables">Vegetables</option>
+        <option value="Fruits">Fruits</option>
+        <option value="Grains">Grains</option>
+        <option value="Dairy/Honey">Dairy/Honey</option>
+      </select>
+      <select id="placeFilter" onchange="renderMarket()">
+        <option value="All">All Farm Places</option>
+      </select>
+    </div>
+
+    <div class="grid" id="marketGrid"></div>
+  </section>
+
+  <!-- SMART PRICE CHART SECTION -->
+  <section id="sec-chart" class="section">
+    <div class="panel">
+      <h3>Smart Price Comparison Chart (Direct Farm Price vs. Retail Market Price)</h3>
+      <p style="font-size:0.88rem; color:var(--muted); margin-bottom:14px;">
+        Live comparison of farmer prices against standard retail market rates per unit.
+      </p>
+      <div class="chart-box">
+        <canvas id="priceChart" width="960" height="320"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- FARMER PORTAL SECTION (ONLY ACCESSIBLE TO LOGGED-IN FARMERS) -->
+  <section id="sec-farmer" class="section">
+    <div class="panel">
+      <h3>Add Harvest Produce with Crop Photo (Publishes Live to Consumers)</h3>
+      <form id="farmerForm" onsubmit="submitProduce(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Crop / Product Name *</label>
+            <input type="text" id="fCrop" required placeholder="e.g., Hassan Potatoes" oninput="autoFillMarketPrice()" />
+            <div class="chip-row" id="rememberedCropChips"></div>
+          </div>
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="fCategory">
+              <option value="Vegetables">Vegetables</option>
+              <option value="Fruits">Fruits</option>
+              <option value="Grains">Grains</option>
+              <option value="Dairy/Honey">Dairy/Honey</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Farm Place / Village (Typed by Farmer) *</label>
+            <input type="text" id="fPlace" required placeholder="Type your village or farm location" />
+            <div class="chip-row" id="rememberedPlaceChips"></div>
+          </div>
+          <div class="form-group">
+            <label>Your Direct Farm Price (₹ / unit) *</label>
+            <input type="number" id="fFarmPrice" min="1" step="0.5" required placeholder="e.g., 30" />
+          </div>
+          <div class="form-group">
+            <label>Local Market Reference Price (₹ / unit) *</label>
+            <input type="number" id="fMarketPrice" min="1" step="0.5" required placeholder="e.g., 45" />
+          </div>
+          <div class="form-group">
+            <label>Available Quantity *</label>
+            <input type="number" id="fQty" min="1" required placeholder="e.g., 50" />
+          </div>
+          <div class="form-group">
+            <label>Unit *</label>
+            <select id="fUnit">
+              <option value="kg">kg</option>
+              <option value="dozen">dozen</option>
+              <option value="litre">litre</option>
+              <option value="quintal">quintal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label>Mandatory Crop Photo (Camera or Gallery) *</label>
+          <div class="photo-box">
+            <input type="file" id="fPhotoInput" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)" />
+            <p style="font-size:0.8rem; color:var(--muted); margin-top:6px;">
+              Take a photo of your harvested crop to publish directly to consumers.
+            </p>
+            <img id="fPhotoPreview" class="photo-preview" alt="Crop preview" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top:14px; width:100%;">
+          Publish Produce to Consumer Market
+        </button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h3>My Live Produce Listings</h3>
+      <div class="grid" id="farmerListingsGrid"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Consumer Bookings for My Produce</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Consumer</th>
+              <th>Phone</th>
+              <th>Crop</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="farmerOrdersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- CONSUMER BOOKING MODAL -->
+<div class="modal-backdrop" id="bookModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Book Farm Produce</h3>
+      <button class="close-btn" onclick="closeModal('bookModal')">&times;</button>
+    </div>
+    <div id="bookItemDetails" style="margin-bottom:12px; font-size:0.9rem;"></div>
+    <form onsubmit="confirmBooking(event)">
+      <input type="hidden" id="bookProductId" />
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Your Name *</label>
+        <input type="text" id="bConsumerName" required placeholder="Enter your full name" />
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Your Mobile Number *</label>
+        <input type="tel" id="bConsumerPhone" required placeholder="e.g., 9876543210" />
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Quantity to Book *</label>
+        <input type="number" id="bQty" min="1" required oninput="updateBookingTotal()" />
+      </div>
+      <div style="background:var(--primary-light); padding:10px; border-radius:10px; margin-bottom:12px; font-weight:700; color:var(--primary-dark);">
+        Total Payable to Farmer: ₹<span id="bTotal">0</span>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;">Confirm Booking</button>
+    </form>
+  </div>
+</div>
+
+<!-- FARMER LOGIN / REGISTER MODAL -->
+<div class="modal-backdrop" id="loginModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Farmer Portal Access</h3>
+      <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button type="button" class="btn btn-primary" id="tabLoginBtn" onclick="switchAuthMode('login')" style="flex:1;">Farmer Sign In</button>
+      <button type="button" class="btn btn-outline" id="tabRegBtn" onclick="switchAuthMode('register')" style="flex:1;">New Farmer</button>
+    </div>
+
+    <form id="loginForm" onsubmit="handleFarmerLogin(event)">
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Select Registered Farmer</label>
+        <select id="loginFarmerId"></select>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>4-Digit Farmer PIN</label>
+        <input type="password" id="loginPin" maxlength="4" pattern="\d{4}" required placeholder="••••" />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;">Open Farmer Portal</button>
+    </form>
+
+    <form id="registerForm" onsubmit="handleFarmerRegister(event)" style="display:none;">
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Farmer Full Name *</label>
+        <input type="text" id="regName" required placeholder="e.g., Mahesh Gowda" />
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Phone Number *</label>
+        <input type="tel" id="regPhone" required placeholder="e.g., 9845011223" />
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Village / Farm Place *</label>
+        <input type="text" id="regPlace" required placeholder="e.g., Belur Road, Hassan" />
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Create 4-Digit PIN *</label>
+        <input type="password" id="regPin" maxlength="4" pattern="\d{4}" required placeholder="4 digits" />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;">Register & Open Farmer Portal</button>
+    </form>
+  </div>
+</div>
+
+<!-- MULTILINGUAL AGRIVOICE AI ASSISTANT -->
+<button class="ai-fab" onclick="toggleAI()">🎙️ AgriVoice AI</button>
+<div class="ai-drawer" id="aiDrawer">
+  <div class="ai-head">
+    <span>AgriVoice AI (5 Languages)</span>
+    <button class="close-btn" style="color:#fff;" onclick="toggleAI()">&times;</button>
+  </div>
+  <div class="ai-lang-bar">
+    <span>Language:</span>
+    <select id="aiLang" onchange="onAILangChange()">
+      <option value="en-IN">English</option>
+      <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
+      <option value="ta-IN">தமிழ் (Tamil)</option>
+      <option value="te-IN">తెలుగు (Telugu)</option>
+      <option value="hi-IN">हिंदी (Hindi)</option>
+    </select>
+  </div>
+  <div class="ai-quick-chips" id="aiQuickChips"></div>
+  <div class="ai-messages" id="aiMessages">
+    <div class="msg bot">
+      Namaste! Tap a quick question above, type below, or use the mic in English, Kannada, Tamil, Telugu, or Hindi.
+    </div>
+  </div>
+  <div class="ai-input-row">
+    <button type="button" class="btn btn-outline" id="micBtn" onclick="startVoiceInput()" title="Voice Input">🎤</button>
+    <input type="text" id="aiInput" placeholder="Ask about prices or crops..." onkeydown="if(event.key==='Enter') sendAIQuery()" />
+    <button type="button" class="btn btn-primary" onclick="sendAIQuery()">Send</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY = "farmdirect_v5_state";
+
+  function svgDataUrl(label, bg1, bg2) {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='360'>
+      <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+        <stop offset='0%' stop-color='${bg1}'/><stop offset='100%' stop-color='${bg2}'/>
+      </linearGradient></defs>
+      <rect width='600' height='360' fill='url(#g)'/>
+      <circle cx='500' cy='70' r='90' fill='rgba(255,255,255,0.12)'/>
+      <text x='50%' y='52%' dominant-baseline='middle' text-anchor='middle' fill='#ffffff'
+        font-family='sans-serif' font-size='32' font-weight='bold'>${label}</text>
+      <text x='50%' y='66%' dominant-baseline='middle' text-anchor='middle' fill='rgba(255,255,255,0.88)'
+        font-family='sans-serif' font-size='16'>Direct Farm Harvest Photo</text>
+    </svg>`;
+    return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+  }
+
+  const DEFAULT_STATE = {
+    farmers: [
+      { id: "F1", name: "Ramesh Gowda", phone: "9845012341", place: "Belur Road, Hassan", pin: "1111" },
+      { id: "F2", name: "Kavitha Patil", phone: "9845012342", place: "Arkalgud", pin: "2222" },
+      { id: "F3", name: "Suresh Naik", phone: "9845012343", place: "Sakleshpur", pin: "3333" }
+    ],
+    rememberedPlaces: ["Belur Road, Hassan", "Arkalgud", "Sakleshpur", "Holenarasipura"],
+    rememberedPrices: {
+      "Nati Tomatoes": 45,
+      "Hassan Potatoes": 38,
+      "Yelakki Bananas": 65,
+      "Organic Ragi": 52,
+      "Fresh Palak Spinach": 30
+    },
+    products: [
+      {
+        id: "P1",
+        farmerId: "F1",
+        farmerName: "Ramesh Gowda",
+        farmerPhone: "9845012341",
+        place: "Belur Road, Hassan",
+        crop: "Nati Tomatoes",
+        category: "Vegetables",
+        farmPrice: 26,
+        marketPrice: 45,
+        qty: 120,
+        unit: "kg",
+        photo: svgDataUrl("Fresh Nati Tomatoes", "#c62828", "#ef6c00")
+      },
+      {
+        id: "P2",
+        farmerId: "F2",
+        farmerName: "Kavitha Patil",
+        farmerPhone: "9845012342",
+        place: "Arkalgud",
+        crop: "Yelakki Bananas",
+        category: "Fruits",
+        farmPrice: 44,
+        marketPrice: 65,
+        qty: 60,
+        unit: "dozen",
+        photo: svgDataUrl("Yelakki Bananas", "#b28704", "#558b2f")
+      },
+      {
+        id: "P3",
+        farmerId: "F1",
+        farmerName: "Ramesh Gowda",
+        farmerPhone: "9845012341",
+        place: "Belur Road, Hassan",
+        crop: "Organic Ragi",
+        category: "Grains",
+        farmPrice: 38,
+        marketPrice: 52,
+        qty: 200,
+        unit: "kg",
+        photo: svgDataUrl("Organic Finger Millet", "#5d4037", "#8d6e63")
+      }
+    ],
+    orders: [
+      {
+        id: "ORD-101",
+        productId: "P1",
+        farmerId: "F1",
+        crop: "Nati Tomatoes",
+        consumerName: "Ananya Rao",
+        consumerPhone: "9900112233",
+        qty: 5,
+        unit: "kg",
+        total: 130,
+        status: "Pending"
+      }
+    ]
+  };
+
+  const AI_TEXT = {
+    "en-IN": {
+      greeting: "Namaste! Ask me about crop prices, farmers, or savings in English.",
+      placeholder: "Ask about prices or crops...",
+      chips: ["All crop prices", "Tomato price", "Banana price", "How to book?"],
+      noProducts: "No crops are currently listed in the market.",
+      cropInfo: (m, save) => `${m.crop} from ${m.farmerName} (${m.place}) is ₹${m.farmPrice}/${m.unit} vs ₹${m.marketPrice} in retail — you save ₹${save}/${m.unit}. ${m.qty} ${m.unit} available.`,
+      listPrefix: "Available farm produce right now: ",
+      bookInfo: "Click 'Book Produce' on any crop card in the Consumer Market, enter your name, phone, and quantity to confirm.",
+      fallback: "Ask me for prices of Tomatoes, Potatoes, Bananas, Ragi, or tap a quick button above."
+    },
+    "kn-IN": {
+      greeting: "ನಮಸ್ಕಾರ! ಬೆಳೆಗಳ ಬೆಲೆ, ರೈತರು ಮತ್ತು ಉಳಿತಾಯದ ಬಗ್ಗೆ ಕನ್ನಡದಲ್ಲಿ ಕೇಳಿ.",
+      placeholder: "ಬೆಲೆ ಅಥವಾ ಬೆಳೆ ಬಗ್ಗೆ ಕೇಳಿ...",
+      chips: ["ಎಲ್ಲಾ ಬೆಳೆಗಳ ಬೆಲೆ", "ಟೊಮೇಟೊ ಬೆಲೆ", "ಬಾಳೆಹಣ್ಣು ಬೆಲೆ", "ಬುಕ್ ಮಾಡುವುದು ಹೇಗೆ?"],
+      noProducts: "ಪ್ರಸ್ತುತ ಯಾವುದೇ ಬೆಳೆಗಳು ಲಭ್ಯವಿಲ್ಲ.",
+      cropInfo: (m, save) => `${m.farmerName} (${m.place}) ಅವರ ${m.crop} ಬೆಲೆ ₹${m.farmPrice}/${m.unit} (ಮಾರುಕಟ್ಟೆ ₹${m.marketPrice}) — ಪ್ರತಿ ${m.unit} ಗೆ ₹${save} ಉಳಿತಾಯ. ${m.qty} ${m.unit} ಲಭ್ಯವಿದೆ.`,
+      listPrefix: "ಈಗ ಲಭ್ಯವಿರುವ ಬೆಳೆಗಳು: ",
+      bookInfo: "ಯಾವುದೇ ಬೆಳೆಯ ಕಾರ್ಡ್ ಮೇಲೆ 'Book Produce' ಒತ್ತಿ, ನಿಮ್ಮ ಹೆಸರು, ಫೋನ್ ಮತ್ತು ಪ್ರಮಾಣವನ್ನು ನಮೂದಿಸಿ ಬುಕ್ ಮಾಡಿ.",
+      fallback: "ಟೊಮೇಟೊ, ಆಲೂಗಡ್ಡೆ, ಬಾಳೆಹಣ್ಣು ಅಥವಾ ರಾಗಿಯ ಬೆಲೆ ಬಗ್ಗೆ ಕೇಳಿ."
+    },
+    "ta-IN": {
+      greeting: "வணக்கம்! பயிர் விலைகள், விவசாயிகள் மற்றும் சேமிப்பு பற்றி தமிழில் கேளுங்கள்.",
+      placeholder: "விலை அல்லது பயிர் பற்றி கேளுங்கள்...",
+      chips: ["அனைத்து பயிர் விலைகள்", "தக்காளி விலை", "வாழைப்பழம் விலை", "புக் செய்வது எப்படி?"],
+      noProducts: "தற்போது பயிர்கள் எதுவும் இல்லை.",
+      cropInfo: (m, save) => `${m.farmerName} (${m.place}) வழங்கும் ${m.crop} விலை ₹${m.farmPrice}/${m.unit} (சந்தை விலை ₹${m.marketPrice}) — ₹${save}/${m.unit} சேமிப்பு. ${m.qty} ${m.unit} உள்ளது.`,
+      listPrefix: "இப்போது உள்ள பயிர்கள்: ",
+      bookInfo: "பயிர் அட்டையில் 'Book Produce' என்பதை அழுத்தி உங்கள் பெயர், தொலைபேசி மற்றும் அளவை உள்ளிடவும்.",
+      fallback: "தக்காளி, உருளைக்கிழங்கு, வாழைப்பழம் அல்லது ராகி விலையை கேளுங்கள்."
+    },
+    "te-IN": {
+      greeting: "నమస్కారం! పంట ధరలు, రైతులు మరియు పొదుపు గురించి తెలుగులో అడగండి.",
+      placeholder: "ధర లేదా పంట గురించి అడగండి...",
+      chips: ["అన్ని పంటల ధరలు", "టమాటా ధర", "అరటిపండు ధర", "బుక్ చేయడం ఎలా?"],
+      noProducts: "ప్రస్తుతం పంటలు ఏవీ లేవు.",
+      cropInfo: (m, save) => `${m.farmerName} (${m.place}) వారి ${m.crop} ధర ₹${m.farmPrice}/${m.unit} (మార్కెట్ ధర ₹${m.marketPrice}) — ₹${save}/${m.unit} ఆదా. ${m.qty} ${m.unit} అందుబాటులో ఉంది.`,
+      listPrefix: "ప్రస్తుతం అందుబాటులో ఉన్న పంటలు: ",
+      bookInfo: "పంట కార్డుపై 'Book Produce' నొక్కి మీ పేరు, ఫోన్ నంబర్ మరియు పరిమాణాన్ని నమోదు చేయండి.",
+      fallback: "టమాటాలు, బంగాళదుంపలు, అరటిపండ్లు లేదా రాగుల ధరల గురించి అడగండి."
+    },
+    "hi-IN": {
+      greeting: "नमस्ते! फसलों के दाम, किसानों और बचत के बारे में हिंदी में पूछें।",
+      placeholder: "दाम या फसल के बारे में पूछें...",
+      chips: ["सभी फसलों के दाम", "टमाटर का दाम", "केले का दाम", "बुक कैसे करें?"],
+      noProducts: "अभी कोई फसल उपलब्ध नहीं है।",
+      cropInfo: (m, save) => `${m.farmerName} (${m.place}) का ${m.crop} ₹${m.farmPrice}/${m.unit} है (बाज़ार भाव ₹${m.marketPrice}) — ₹${save}/${m.unit} की बचत। ${m.qty} ${m.unit} उपलब्ध है।`,
+      listPrefix: "अभी उपलब्ध फसलें: ",
+      bookInfo: "किसी भी फसल कार्ड पर 'Book Produce' दबाएं, अपना नाम, फोन नंबर और मात्रा दर्ज करके बुक करें।",
+      fallback: "टमाटर, आलू, केला या रागी के दाम पूछें।"
+    }
+  };
+
+  let state = loadState();
+  let session = { role: "consumer", farmerId: null };
+  let activeTab = "sec-market";
+  let uploadedPhotoData = "";
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      showToast("Storage full — try a smaller photo.");
+    }
+  }
+
+  function showToast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.style.display = "block";
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => { el.style.display = "none"; }, 3200);
+  }
+
+  /* NAVIGATION — STRICTLY CONSUMER vs FARMER */
+  function renderNav() {
+    const nav = document.getElementById("navLinks");
+    let html = `
+      <button class="nav-btn ${activeTab === 'sec-market' ? 'active' : ''}" onclick="switchTab('sec-market')">Consumer Market</button>
+      <button class="nav-btn ${activeTab === 'sec-chart' ? 'active' : ''}" onclick="switchTab('sec-chart')">Smart Price Chart</button>
+    `;
+
+    if (session.role === "consumer") {
+      html += `<button class="nav-btn farmer-login" onclick="openLoginModal()">Farmer Login</button>`;
+    } else if (session.role === "farmer") {
+      const farmer = state.farmers.find(f => f.id === session.farmerId);
+      html += `
+        <button class="nav-btn ${activeTab === 'sec-farmer' ? 'active' : ''}" onclick="switchTab('sec-farmer')">My Farmer Portal</button>
+        <span class="role-pill">👨‍🌾 ${farmer ? farmer.name : 'Farmer'}</span>
+        <button class="nav-btn logout" onclick="logoutPartner()">Logout</button>
+      `;
+    }
+    nav.innerHTML = html;
+  }
+
+  function switchTab(tabId) {
+    if (tabId === "sec-farmer" && session.role !== "farmer") return;
+    activeTab = tabId;
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById(tabId).classList.add("active");
+    renderNav();
+    if (tabId === "sec-market") renderMarket();
+    if (tabId === "sec-chart") drawPriceChart();
+    if (tabId === "sec-farmer") renderFarmerPortal();
+  }
+
+  /* CONSUMER MARKET — SHOWS ALL FARMER PRODUCE IMMEDIATELY */
+  function renderMarket() {
+    const allProducts = state.products;
+    const places = [...new Set(allProducts.map(p => p.place))];
+    const placeSel = document.getElementById("placeFilter");
+    const currentPlace = placeSel.value;
+    placeSel.innerHTML = `<option value="All">All Farm Places</option>` +
+      places.map(pl => `<option value="${pl}">${pl}</option>`).join("");
+    if (places.includes(currentPlace)) placeSel.value = currentPlace;
+
+    const avgSave = allProducts.length
+      ? Math.round(allProducts.reduce((acc, p) => acc + ((p.marketPrice - p.farmPrice) / p.marketPrice) * 100, 0) / allProducts.length)
+      : 0;
+
+    document.getElementById("heroStats").innerHTML = `
+      <div class="stat-box"><strong>${allProducts.length}</strong><span>Live Crops</span></div>
+      <div class="stat-box"><strong>${avgSave}%</strong><span>Avg Consumer Savings</span></div>
+      <div class="stat-box"><strong>${state.farmers.length}</strong><span>Local Farmers</span></div>
+    `;
+
+    const q = document.getElementById("searchInput").value.trim().toLowerCase();
+    const cat = document.getElementById("catFilter").value;
+    const plFilter = placeSel.value;
+
+    const filtered = allProducts.filter(p => {
+      const matchQ = !q || p.crop.toLowerCase().includes(q) || p.farmerName.toLowerCase().includes(q) || p.place.toLowerCase().includes(q);
+      const matchCat = cat === "All" || p.category === cat;
+      const matchPlace = plFilter === "All" || p.place === plFilter;
+      return matchQ && matchCat && matchPlace;
+    });
+
+    const grid = document.getElementById("marketGrid");
+    if (!filtered.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">No produce matches your search filter right now.</div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(p => {
+      const savePct = Math.max(0, Math.round(((p.marketPrice - p.farmPrice) / p.marketPrice) * 100));
+      const outOfStock = p.qty <= 0;
+      return `
+        <div class="card">
+          <div class="card-img-wrap">
+            <img src="${p.photo}" alt="${p.crop}" />
+            <span class="badge">📸 Farmer Photo</span>
+            <span class="cat-tag">${p.category}</span>
+          </div>
+          <div class="card-body">
+            <div class="card-title">
+              <h3>${p.crop}</h3>
+              <span class="savings-pill">Save ${savePct}%</span>
+            </div>
+            <div class="price-row">
+              <span class="farm-price">₹${p.farmPrice} / ${p.unit}</span>
+              <span class="market-price">Market ₹${p.marketPrice}</span>
+            </div>
+            <div class="meta-list">
+              <div>👨‍🌾 <strong>Farmer:</strong> ${p.farmerName}</div>
+              <div>📍 <strong>Place:</strong> ${p.place}</div>
+              <div>📦 <strong>Available:</strong> ${p.qty} ${p.unit}</div>
+              <div>📞 <strong>Contact:</strong> <a href="tel:${p.farmerPhone}">${p.farmerPhone}</a></div>
+            </div>
+            <div class="card-actions">
+              <a class="btn btn-outline" href="https://wa.me/91${p.farmerPhone.replace(/\D/g,'')}" target="_blank" rel="noopener">WhatsApp</a>
+              <button class="btn btn-primary" ${outOfStock ? "disabled" : ""} onclick="openBookModal('${p.id}')">
+                ${outOfStock ? "Sold Out" : "Book Produce"}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  /* CONSUMER BOOKING */
+  function openBookModal(prodId) {
+    const p = state.products.find(item => item.id === prodId);
+    if (!p || p.qty <= 0) return;
+    document.getElementById("bookProductId").value = p.id;
+    document.getElementById("bookItemDetails").innerHTML = `
+      <strong>${p.crop}</strong> by <strong>${p.farmerName}</strong> (${p.place})<br/>
+      Direct Price: <strong>₹${p.farmPrice}/${p.unit}</strong> • Available: <strong>${p.qty} ${p.unit}</strong>
+    `;
+    const qtyInput = document.getElementById("bQty");
+    qtyInput.max = p.qty;
+    qtyInput.value = Math.min(2, p.qty);
+    updateBookingTotal();
+    document.getElementById("bookModal").classList.add("open");
+  }
+
+  function updateBookingTotal() {
+    const id = document.getElementById("bookProductId").value;
+    const p = state.products.find(item => item.id === id);
+    const qty = Number(document.getElementById("bQty").value) || 0;
+    document.getElementById("bTotal").textContent = p ? (p.farmPrice * qty).toFixed(2) : "0";
+  }
+
+  function confirmBooking(e) {
+    e.preventDefault();
+    const id = document.getElementById("bookProductId").value;
+    const p = state.products.find(item => item.id === id);
+    const qty = Number(document.getElementById("bQty").value);
+    if (!p || qty < 1 || qty > p.qty) {
+      showToast("Invalid quantity requested.");
+      return;
+    }
+    p.qty -= qty;
+    state.orders.unshift({
+      id: "ORD-" + Math.floor(100 + Math.random() * 900),
+      productId: p.id,
+      farmerId: p.farmerId,
+      crop: p.crop,
+      consumerName: document.getElementById("bConsumerName").value.trim(),
+      consumerPhone: document.getElementById("bConsumerPhone").value.trim(),
+      qty,
+      unit: p.unit,
+      total: p.farmPrice * qty,
+      status: "Pending"
+    });
+    saveState();
+    closeModal("bookModal");
+    renderMarket();
+    showToast("Booking confirmed! Farmer notified.");
+  }
+
+  /* FARMER LOGIN & REGISTRATION */
+  function openLoginModal() {
+    const sel = document.getElementById("loginFarmerId");
+    sel.innerHTML = state.farmers.map(f => `<option value="${f.id}">${f.name} (${f.place})</option>`).join("");
+    switchAuthMode("login");
+    document.getElementById("loginModal").classList.add("open");
+  }
+
+  function switchAuthMode(mode) {
+    document.getElementById("loginForm").style.display = mode === "login" ? "block" : "none";
+    document.getElementById("registerForm").style.display = mode === "register" ? "block" : "none";
+    document.getElementById("tabLoginBtn").className = mode === "login" ? "btn btn-primary" : "btn btn-outline";
+    document.getElementById("tabRegBtn").className = mode === "register" ? "btn btn-primary" : "btn btn-outline";
+  }
+
+  function handleFarmerLogin(e) {
+    e.preventDefault();
+    const fId = document.getElementById("loginFarmerId").value;
+    const pin = document.getElementById("loginPin").value.trim();
+    const farmer = state.farmers.find(f => f.id === fId);
+    if (!farmer || farmer.pin !== pin) {
+      showToast("Incorrect Farmer PIN.");
+      return;
+    }
+    session = { role: "farmer", farmerId: farmer.id };
+    closeModal("loginModal");
+    document.getElementById("loginPin").value = "";
+    switchTab("sec-farmer");
+    showToast(`Welcome back, ${farmer.name}!`);
+  }
+
+  function handleFarmerRegister(e) {
+    e.preventDefault();
+    const name = document.getElementById("regName").value.trim();
+    const phone = document.getElementById("regPhone").value.trim();
+    const place = document.getElementById("regPlace").value.trim();
+    const pin = document.getElementById("regPin").value.trim();
+
+    const newFarmer = {
+      id: "F" + (state.farmers.length + 1),
+      name,
+      phone,
+      place,
+      pin
+    };
+    state.farmers.push(newFarmer);
+    if (!state.rememberedPlaces.includes(place)) state.rememberedPlaces.push(place);
+    saveState();
+    session = { role: "farmer", farmerId: newFarmer.id };
+    closeModal("loginModal");
+    e.target.reset();
+    switchTab("sec-farmer");
+    showToast("Farmer account created!");
+  }
+
+  function logoutPartner() {
+    session = { role: "consumer", farmerId: null };
+    switchTab("sec-market");
+    showToast("Returned to Consumer Market.");
+  }
+
+  /* FARMER PORTAL & DIRECT LIVE PUBLISH */
+  function renderFarmerPortal() {
+    const farmer = state.farmers.find(f => f.id === session.farmerId);
+    if (!farmer) return;
+    if (!document.getElementById("fPlace").value) {
+      document.getElementById("fPlace").value = farmer.place;
+    }
+
+    document.getElementById("rememberedPlaceChips").innerHTML = state.rememberedPlaces
+      .map(pl => `<span class="chip" onclick="document.getElementById('fPlace').value='${pl.replace(/'/g, "\\'")}'">${pl}</span>`)
+      .join("");
+
+    document.getElementById("rememberedCropChips").innerHTML = Object.keys(state.rememberedPrices)
+      .map(c => `<span class="chip" onclick="selectRememberedCrop('${c.replace(/'/g, "\\'")}')">${c} (₹${state.rememberedPrices[c]})</span>`)
+      .join("");
+
+    const myProducts = state.products.filter(p => p.farmerId === farmer.id);
+    const grid = document.getElementById("farmerListingsGrid");
+    grid.innerHTML = myProducts.length ? myProducts.map(p => `
+      <div class="card">
+        <div class="card-img-wrap">
+          <img src="${p.photo}" alt="${p.crop}" />
+          <span class="badge">✔ Live in Consumer Market</span>
+        </div>
+        <div class="card-body">
+          <h3>${p.crop}</h3>
+          <div class="meta-list">
+            <div>📍 <strong>Place:</strong> ${p.place}</div>
+            <div>💰 <strong>Farm / Market:</strong> ₹${p.farmPrice} / ₹${p.marketPrice} per ${p.unit}</div>
+            <div>📦 <strong>Stock:</strong> ${p.qty} ${p.unit}</div>
+          </div>
+          <div class="card-actions" style="grid-template-columns:1fr;">
+            <button class="btn btn-danger" onclick="deleteProduct('${p.id}')">Remove Listing</button>
+          </div>
+        </div>
+      </div>
+    `).join("") : `<div class="empty-state" style="grid-column:1/-1;">You haven't published any produce yet.</div>`;
+
+    const myOrders = state.orders.filter(o => o.farmerId === farmer.id);
+    const tbody = document.getElementById("farmerOrdersBody");
+    tbody.innerHTML = myOrders.length ? myOrders.map(o => `
+      <tr>
+        <td><strong>${o.id}</strong></td>
+        <td>${o.consumerName}</td>
+        <td><a href="tel:${o.consumerPhone}">${o.consumerPhone}</a></td>
+        <td>${o.crop}</td>
+        <td>${o.qty} ${o.unit}</td>
+        <td>₹${o.total}</td>
+        <td><strong>${o.status}</strong></td>
+        <td>
+          ${o.status === "Pending" ? `<button class="btn btn-primary" onclick="advanceOrder('${o.id}','Confirmed')">Confirm</button>` :
+            o.status === "Confirmed" ? `<button class="btn btn-accent" onclick="advanceOrder('${o.id}','Ready for Pickup')">Mark Ready</button>` :
+            `<span>Completed</span>`}
+        </td>
+      </tr>
+    `).join("") : `<tr><td colspan="8" style="text-align:center; color:var(--muted);">No consumer bookings yet.</td></tr>`;
+  }
+
+  function selectRememberedCrop(cropName) {
+    document.getElementById("fCrop").value = cropName;
+    autoFillMarketPrice();
+  }
+
+  function autoFillMarketPrice() {
+    const val = document.getElementById("fCrop").value.trim();
+    const matchedKey = Object.keys(state.rememberedPrices).find(k => k.toLowerCase() === val.toLowerCase());
+    if (matchedKey) {
+      document.getElementById("fMarketPrice").value = state.rememberedPrices[matchedKey];
+    }
+  }
+
+  function handlePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement("canvas");
+        const maxW = 640;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        uploadedPhotoData = canvas.toDataURL("image/jpeg", 0.75);
+        const preview = document.getElementById("fPhotoPreview");
+        preview.src = uploadedPhotoData;
+        preview.style.display = "inline-block";
+      };
+      img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function submitProduce(e) {
+    e.preventDefault();
+    const farmer = state.farmers.find(f => f.id === session.farmerId);
+    if (!farmer) return;
+    if (!uploadedPhotoData) {
+      showToast("Please capture or upload a real crop photo first.");
+      return;
+    }
+    const crop = document.getElementById("fCrop").value.trim();
+    const category = document.getElementById("fCategory").value;
+    const place = document.getElementById("fPlace").value.trim();
+    const farmPrice = Number(document.getElementById("fFarmPrice").value);
+    const marketPrice = Number(document.getElementById("fMarketPrice").value);
+    const qty = Number(document.getElementById("fQty").value);
+    const unit = document.getElementById("fUnit").value;
+
+    if (farmPrice > marketPrice * 1.5) {
+      showToast("Check price: Farm price looks unusually higher than market price.");
+      return;
+    }
+
+    if (!state.rememberedPlaces.includes(place)) state.rememberedPlaces.push(place);
+    state.rememberedPrices[crop] = marketPrice;
+
+    state.products.unshift({
+      id: "P" + Date.now(),
+      farmerId: farmer.id,
+      farmerName: farmer.name,
+      farmerPhone: farmer.phone,
+      place,
+      crop,
+      category,
+      farmPrice,
+      marketPrice,
+      qty,
+      unit,
+      photo: uploadedPhotoData
+    });
+
+    saveState();
+    e.target.reset();
+    uploadedPhotoData = "";
+    document.getElementById("fPhotoPreview").style.display = "none";
+    renderFarmerPortal();
+    showToast("Published! Consumers can now view and book your crop.");
+  }
+
+  function deleteProduct(prodId) {
+    state.products = state.products.filter(p => p.id !== prodId);
+    saveState();
+    renderFarmerPortal();
+    showToast("Listing removed.");
+  }
+
+  function advanceOrder(orderId, nextStatus) {
+    const ord = state.orders.find(o => o.id === orderId);
+    if (ord) {
+      ord.status = nextStatus;
+      saveState();
+      renderFarmerPortal();
+      showToast(`Order ${orderId} marked as ${nextStatus}.`);
+    }
+  }
+
+  /* SMART PRICE CANVAS CHART */
+  function drawPriceChart() {
+    const canvas = document.getElementById("priceChart");
+    const ctx = canvas.getContext("2d");
+    const items = state.products;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!items.length) {
+      ctx.fillStyle = "#5a6b60";
+      ctx.font = "16px sans-serif";
+      ctx.fillText("No produce available to chart yet.", 40, 150);
+      return;
+    }
+
+    const padL = 60, padR = 30, padT = 45, padB = 65;
+    const w = canvas.width - padL - padR;
+    const h = canvas.height - padT - padB;
+    const maxVal = Math.max(...items.map(p => Math.max(p.farmPrice, p.marketPrice))) * 1.2;
+
+    ctx.fillStyle = "#1b6b3a";
+    ctx.fillRect(padL, 14, 16, 16);
+    ctx.fillStyle = "#1a241e";
+    ctx.font = "bold 13px sans-serif";
+    ctx.fillText("Direct Farm Price (₹)", padL + 22, 27);
+
+    ctx.fillStyle = "#e07a16";
+    ctx.fillRect(padL + 190, 14, 16, 16);
+    ctx.fillStyle = "#1a241e";
+    ctx.fillText("Retail Market Price (₹)", padL + 212, 27);
+
+    ctx.strokeStyle = "#d5e0d9";
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + (h * i) / 4;
+      const val = Math.round(maxVal * (1 - i / 4));
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(padL + w, y);
+      ctx.stroke();
+      ctx.fillStyle = "#5a6b60";
+      ctx.font = "12px sans-serif";
+      ctx.fillText("₹" + val, 14, y + 4);
+    }
+
+    const groupW = w / items.length;
+    const barW = Math.min(34, groupW * 0.28);
+
+    items.forEach((p, idx) => {
+      const cx = padL + groupW * idx + groupW / 2;
+      const farmH = (p.farmPrice / maxVal) * h;
+      const mktH = (p.marketPrice / maxVal) * h;
+
+      ctx.fillStyle = "#1b6b3a";
+      ctx.fillRect(cx - barW - 3, padT + h - farmH, barW, farmH);
+      ctx.fillStyle = "#134e2a";
+      ctx.font = "bold 11px sans-serif";
+      ctx.fillText("₹" + p.farmPrice, cx - barW - 3, padT + h - farmH - 5);
+
+      ctx.fillStyle = "#e07a16";
+      ctx.fillRect(cx + 3, padT + h - mktH, barW, mktH);
+      ctx.fillStyle = "#9c5108";
+      ctx.fillText("₹" + p.marketPrice, cx + 3, padT + h - mktH - 5);
+
+      ctx.fillStyle = "#1a241e";
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "center";
+      const shortName = p.crop.length > 14 ? p.crop.slice(0, 13) + "…" : p.crop;
+      ctx.fillText(shortName, cx, padT + h + 22);
+      ctx.fillStyle = "#5a6b60";
+      ctx.font = "11px sans-serif";
+      ctx.fillText(p.place.split(",")[0], cx, padT + h + 38);
+      ctx.textAlign = "left";
+    });
+  }
+
+  /* MULTILINGUAL AGRIVOICE AI (5 LANGUAGES + RELIABLE VOICE & QUICK CHIPS) */
+  function getAILang() {
+    return document.getElementById("aiLang").value || "en-IN";
+  }
+
+  function renderAIQuickChips() {
+    const lang = getAILang();
+    const pack = AI_TEXT[lang] || AI_TEXT["en-IN"];
+    document.getElementById("aiQuickChips").innerHTML = pack.chips
+      .map(q => `<span class="chip" onclick="askQuickAI('${q.replace(/'/g, "\\'")}')">${q}</span>`)
+      .join("");
+  }
+
+  function askQuickAI(question) {
+    document.getElementById("aiInput").value = question;
+    sendAIQuery();
+  }
+
+  function onAILangChange() {
+    const lang = getAILang();
+    const pack = AI_TEXT[lang] || AI_TEXT["en-IN"];
+    document.getElementById("aiInput").placeholder = pack.placeholder;
+    renderAIQuickChips();
+    appendAIMsg(pack.greeting, "bot", lang);
+    speakText(pack.greeting, lang);
+  }
+
+  function toggleAI() {
+    document.getElementById("aiDrawer").classList.toggle("open");
+    renderAIQuickChips();
+  }
+
+  function sendAIQuery() {
+    const input = document.getElementById("aiInput");
+    const text = input.value.trim();
+    if (!text) return;
+    const lang = getAILang();
+    appendAIMsg(text, "user", lang);
+    input.value = "";
+
+    const reply = generateAIReply(text, lang);
+    setTimeout(() => {
+      appendAIMsg(reply, "bot", lang);
+      speakText(reply, lang);
+    }, 200);
+  }
+
+  function appendAIMsg(text, sender, lang) {
+    const box = document.getElementById("aiMessages");
+    const div = document.createElement("div");
+    div.className = `msg ${sender}`;
+    const span = document.createElement("div");
+    span.textContent = text;
+    div.appendChild(span);
+
+    if (sender === "bot") {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "speak-mini";
+      btn.textContent = "🔊 Listen";
+      btn.onclick = () => speakText(text, lang || getAILang());
+      div.appendChild(btn);
+    }
+
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function generateAIReply(query, lang) {
+    const pack = AI_TEXT[lang] || AI_TEXT["en-IN"];
+    const q = query.toLowerCase();
+    const items = state.products;
+
+    const cropKeywords = {
+      tomato: ["tomato", "tomatoes", "ಟೊಮೇಟೊ", "தக்காளி", "టమాటా", "టమాటాలు", "टमाटर"],
+      potato: ["potato", "potatoes", "ಆಲೂಗಡ್ಡೆ", "உருளைக்கிழங்கு", "బంగాళదుంప", "आलू"],
+      banana: ["banana", "bananas", "yelakki", "ಬಾಳೆ", "ಬಾಳೆಹಣ್ಣು", "வாழை", "అరటి", "केला"],
+      ragi: ["ragi", "millet", "ರಾಗಿ", "கேழ்வரகு", "రాగి", "रागी"],
+      palak: ["palak", "spinach", "ಪಾಲಕ್", "கீரை", "పాలక్", "पालक"]
+    };
+
+    let matched = items.find(p =>
+      q.includes(p.crop.toLowerCase()) ||
+      p.crop.toLowerCase().split(" ").some(w => w.length > 3 && q.includes(w))
+    );
+
+    if (!matched) {
+      for (const group of Object.values(cropKeywords)) {
+        if (group.some(kw => q.includes(kw))) {
+          matched = items.find(p => group.some(kw => p.crop.toLowerCase().includes(kw)));
+          if (matched) break;
+        }
+      }
+    }
+
+    if (matched) {
+      const save = Math.max(0, matched.marketPrice - matched.farmPrice);
+      return pack.cropInfo(matched, save);
+    }
+
+    if (
+      q.includes("book") || q.includes("buy") || q.includes("order") ||
+      q.includes("ಬುಕ್") || q.includes("புக்") || q.includes("బుక్") || q.includes("बुक")
+    ) {
+      return pack.bookInfo;
+    }
+
+    if (
+      q.includes("price") || q.includes("list") || q.includes("available") || q.includes("all") ||
+      q.includes("ಬೆಲೆ") || q.includes("ಎಲ್ಲಾ") || q.includes("விலை") || q.includes("ధర") || q.includes("दाम") || q.includes("भाव")
+    ) {
+      if (!items.length) return pack.noProducts;
+      return pack.listPrefix + items.map(p => `${p.crop} ₹${p.farmPrice}/${p.unit} (${p.place})`).join("; ") + ".";
+    }
+
+    return pack.fallback;
+  }
+
+  function startVoiceInput(fallbackLang) {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      showToast("Voice mic is blocked in this editor preview. Open in Chrome or tap a quick chip above!");
+      return;
+    }
+
+    const micBtn = document.getElementById("micBtn");
+    const targetLang = fallbackLang || getAILang();
+    const rec = new SpeechRec();
+    rec.lang = targetLang;
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+
+    micBtn.classList.add("mic-recording");
+    showToast(`Listening (${targetLang})... Speak now`);
+
+    rec.onresult = (e) => {
+      micBtn.classList.remove("mic-recording");
+      const transcript = e.results[0][0].transcript;
+      document.getElementById("aiInput").value = transcript;
+      sendAIQuery();
+    };
+
+    rec.onerror = (err) => {
+      micBtn.classList.remove("mic-recording");
+      if (err.error === "language-not-supported" && targetLang !== "en-IN") {
+        startVoiceInput("en-IN");
+        return;
+      }
+      if (err.error === "not-allowed" || err.error === "service-not-allowed") {
+        showToast("Mic permission blocked by app. Open in Chrome or tap a quick chip above!");
+      } else {
+        showToast("No speech detected. Tap a quick chip above or type your question.");
+      }
+    };
+
+    rec.onend = () => {
+      micBtn.classList.remove("mic-recording");
+    };
+
+    try {
+      rec.start();
+    } catch (e) {
+      micBtn.classList.remove("mic-recording");
+      showToast("Tap a quick chip above or type your question.");
+    }
+  }
+
+  function speakText(text, lang) {
+    if (!("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      const targetLang = lang || "en-IN";
+      u.lang = targetLang;
+      const voices = window.speechSynthesis.getVoices();
+      const matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang.split("-")[0].toLowerCase()));
+      if (matchedVoice) u.voice = matchedVoice;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove("open");
+  }
+
+  renderNav();
+  renderMarket();
+  renderAIQuickChips();
+</script>
+</body>
+</html>
